@@ -10,14 +10,14 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
@@ -30,7 +30,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: grades; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: grades; Type: TABLE; Schema: public; Owner: user; Tablespace: 
 --
 
 CREATE TABLE grades (
@@ -41,8 +41,10 @@ CREATE TABLE grades (
 );
 
 
+ALTER TABLE public.grades OWNER TO "user";
+
 --
--- Name: grades_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: grades_id_seq; Type: SEQUENCE; Schema: public; Owner: user
 --
 
 CREATE SEQUENCE grades_id_seq
@@ -53,15 +55,17 @@ CREATE SEQUENCE grades_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.grades_id_seq OWNER TO "user";
+
 --
--- Name: grades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: grades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: user
 --
 
 ALTER SEQUENCE grades_id_seq OWNED BY grades.id;
 
 
 --
--- Name: projects; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: projects; Type: TABLE; Schema: public; Owner: user; Tablespace: 
 --
 
 CREATE TABLE projects (
@@ -72,8 +76,10 @@ CREATE TABLE projects (
 );
 
 
+ALTER TABLE public.projects OWNER TO "user";
+
 --
--- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: user
 --
 
 CREATE SEQUENCE projects_id_seq
@@ -84,88 +90,109 @@ CREATE SEQUENCE projects_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.projects_id_seq OWNER TO "user";
+
 --
--- Name: projects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: projects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: user
 --
 
 ALTER SEQUENCE projects_id_seq OWNED BY projects.id;
 
 
 --
--- Name: students; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: students; Type: TABLE; Schema: public; Owner: user; Tablespace: 
 --
 
 CREATE TABLE students (
     first_name character varying(30),
     last_name character varying(30),
-    github character varying(30)
+    github character varying(30) NOT NULL
 );
 
 
+ALTER TABLE public.students OWNER TO "user";
+
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: reportcardview; Type: VIEW; Schema: public; Owner: user
+--
+
+CREATE VIEW reportcardview AS
+ SELECT students.first_name,
+    students.last_name,
+    projects.title,
+    projects.max_grade,
+    grades.grade
+   FROM ((students
+     JOIN grades ON (((students.github)::text = (grades.student_github)::text)))
+     JOIN projects ON (((projects.title)::text = (grades.project_title)::text)));
+
+
+ALTER TABLE public.reportcardview OWNER TO "user";
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: user
 --
 
 ALTER TABLE ONLY grades ALTER COLUMN id SET DEFAULT nextval('grades_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: id; Type: DEFAULT; Schema: public; Owner: user
 --
 
 ALTER TABLE ONLY projects ALTER COLUMN id SET DEFAULT nextval('projects_id_seq'::regclass);
 
 
 --
--- Data for Name: grades; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: grades; Type: TABLE DATA; Schema: public; Owner: user
 --
 
 COPY grades (id, student_github, project_title, grade) FROM stdin;
 1	jhacks	Markov	10
 2	jhacks	Blockly	2
-3	sdevelops	Blockly	100
-4	sdevelops	Markov	50
+3	sdevelops	Markov	50
+4	sdevelops	Blockly	10
 \.
 
 
 --
--- Name: grades_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: grades_id_seq; Type: SEQUENCE SET; Schema: public; Owner: user
 --
 
 SELECT pg_catalog.setval('grades_id_seq', 4, true);
 
 
 --
--- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: user
 --
 
 COPY projects (id, title, description, max_grade) FROM stdin;
 1	Markov	Tweets generated from Markov chains	50
 2	Blockly	Programmatic Logic Puzzle Game	10
+3	Shopping Cart	Flask and Sessions Practice	100
+4	Balloonicorn Birthday Website	Bootstrap	75
 \.
 
 
 --
--- Name: projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: user
 --
 
-SELECT pg_catalog.setval('projects_id_seq', 2, true);
+SELECT pg_catalog.setval('projects_id_seq', 4, true);
 
 
 --
--- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: user
 --
 
 COPY students (first_name, last_name, github) FROM stdin;
 Jane	Hacker	jhacks
 Sarah	Developer	sdevelops
-Jane	Hacker	jhacks
-Sarah	Developer	sdevelops
 \.
 
 
 --
--- Name: grades_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: grades_pkey; Type: CONSTRAINT; Schema: public; Owner: user; Tablespace: 
 --
 
 ALTER TABLE ONLY grades
@@ -173,7 +200,7 @@ ALTER TABLE ONLY grades
 
 
 --
--- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: user; Tablespace: 
 --
 
 ALTER TABLE ONLY projects
@@ -181,12 +208,20 @@ ALTER TABLE ONLY projects
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: -
+-- Name: students_pkey; Type: CONSTRAINT; Schema: public; Owner: user; Tablespace: 
+--
+
+ALTER TABLE ONLY students
+    ADD CONSTRAINT students_pkey PRIMARY KEY (github);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM "user";
-GRANT ALL ON SCHEMA public TO "user;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
